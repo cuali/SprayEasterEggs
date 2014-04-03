@@ -1,0 +1,6 @@
+body{background:transparent}
+.alert{margin-top:10px}
+.panel{border-width:2px;width:604px;height:636px;padding:0;margin:0}
+.panel-body{width:600px;padding:0}
+#log{margin:10px 10px;width:580px;height:120px;overflow:auto}
+#log>p{margin-bottom:1.2em;font:monospace;font-size:72%}
