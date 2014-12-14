@@ -8,7 +8,7 @@
     Some applications need to expose an API that will not only handle synchronous requests, but also open a websocket to asynchronously push new notifications to the visualization client and accept plain socket channels from other information feeders.
     This tutorial will explain how to implement an application that offers three different interfaces to its Akka actors: HTTP request, plain socket and websocket.
     </p>
-    <p style='text-align:center'><img src='tutorial/architecture.png' style='border:0;width:100%;max-width:350px' /></p>
+    <p style='text-align:center'><img src='architecture.png' style='border:0;width:100%;max-width:350px' /></p>
     <p>As an illustration, we will mimic an Easter eggs hunt, with one map for the various participants to hide their own egg and another map to find the hidden eggs.</p>
     <ul>
     <li>The system will be started by the <code><a href='#code/src/main/scala/reactive/ReactiveSystem.scala' class='shortcut'>ReactiveSystem</a></code> application object.</li>
@@ -18,7 +18,7 @@
     <li>Some four more actors will perform the real work: <code><a href='#code/src/main/scala/reactive/socket/SocketActor.scala' class='shortcut'>SocketActor</a></code>, <code><a href='#code/src/main/scala/reactive/find/FindActor.scala' class='shortcut'>FindActor</a></code>, <code><a href='#code/src/main/scala/reactive/hide/HideActor.scala' class='shortcut'>HideActor</a></code> and <code><a href='#code/src/main/scala/reactive/hide/MarkerActor.scala' class='shortcut'>MarkerActor</a></code>.</li>
     </ul>
     <p>The application will eventually present a visual interface such as the following screenshot:</p>
-    <p style='text-align:center'><img src='tutorial/screenshot.png' style='border:0;width:100%;max-width:700px' /></p>
+    <p style='text-align:center'><img src='screenshot.png' style='border:0;width:100%;max-width:700px' /></p>
   </div>
   <div><h2>Splitting up the API into services</h2>
     <h3>Required resources</h3>
