@@ -1,17 +1,17 @@
 package reactive.find
 
-import akka.actor.{Actor, ActorLogging}
-import org.java_websocket.WebSocket
-import scala.collection._
 import reactive.socket.ReactiveServer
+import akka.actor.{ Actor, ActorLogging }
+import org.java_websocket.WebSocket
+import scala.collection.mutable
 
 object FindActor {
   sealed trait FindMessage
   case object Clear extends FindMessage
-  case class Unregister(ws: WebSocket) extends FindMessage
-  case class Marker(id: String, idx: String) extends FindMessage
-  case class Clear(marker: Marker) extends FindMessage
-  case class Move(marker: Marker, longitude: String, latitude: String) extends FindMessage
+  case class Unregister(ws : WebSocket) extends FindMessage
+  case class Marker(id : String, idx : String) extends FindMessage
+  case class Clear(marker : Marker) extends FindMessage
+  case class Move(marker : Marker, longitude : String, latitude : String) extends FindMessage
 }
 
 class FindActor extends Actor with ActorLogging {
@@ -30,7 +30,7 @@ class FindActor extends Actor with ActorLogging {
 
     case Close(ws, code, reason, ext) => self ! Unregister(ws)
 
-    case Error(ws, ex) => self ! Unregister(ws)
+    case Error(ws, ex)                => self ! Unregister(ws)
 
     case Message(ws, msg) =>
       log.debug("url {} received msg '{}'", ws.getResourceDescriptor, msg)
@@ -44,8 +44,8 @@ class FindActor extends Actor with ActorLogging {
 
     case Unregister(ws) =>
       if (null != ws) {
-        log.debug("unregister monitor")
         clients -= ws
+        log.debug("unregister monitor")
       }
 
     case Clear(marker) =>
@@ -66,7 +66,7 @@ class FindActor extends Actor with ActorLogging {
       log.debug("sent to {} clients the new move '{}'", clients.size, msg)
   }
 
-  private def message(move :Move) = s"""{"move":{"id":"${move.marker.id}","idx":"${move.marker.idx}","longitude":${move.longitude},"latitude":${move.latitude}}}"""
+  private def message(move : Move) = s"""{"move":{"id":"${move.marker.id}","idx":"${move.marker.idx}","longitude":${move.longitude},"latitude":${move.latitude}}}"""
 
-  private def message(marker :Marker) = s"""{"clear":{"id":"${marker.id}","idx":"${marker.idx}"}}"""
+  private def message(marker : Marker) = s"""{"clear":{"id":"${marker.id}","idx":"${marker.idx}"}}"""
 }

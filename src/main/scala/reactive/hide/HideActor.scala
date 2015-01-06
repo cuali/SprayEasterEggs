@@ -3,7 +3,7 @@ package reactive.hide
 import reactive.socket.ReactiveServer
 import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import org.java_websocket.WebSocket
-import scala.collection._
+import scala.collection.mutable
 
 object HideActor {
   sealed trait HideMessage
@@ -23,16 +23,20 @@ class HideActor extends Actor with ActorLogging {
       val idx = (markers.size % 10).toString
       val marker = context.actorOf(Props(classOf[MarkerActor]))
       markers += ((ws, marker))
-      log.debug("registered marker {}",idx)
+      log.debug("registered marker {}", idx)
       marker ! Start(ws, idx)
     }
-    case Close(ws, code, reason, ext) => self ! Unregister(ws)
-    case Error(ws, ex) => self ! Unregister(ws)
+    case Close(ws, code, reason, ext) => {
+      self ! Unregister(ws)
+    }
+    case Error(ws, ex) => {
+      self ! Unregister(ws)
+    }
     case Message(ws, msg) => {
       val coords = msg.split(" ")
       val lng = coords(0)
       val lat = coords(1)
-      log.debug("move marker to ({},{})",lng,lat)
+      log.debug("move marker to ({},{})", lng, lat)
       markers(ws) ! Move(lng, lat)
     }
     case Clear => {
@@ -50,7 +54,7 @@ class HideActor extends Actor with ActorLogging {
       }
     }
     case move @ Move(lng, lat) => {
-      log.debug("move bunny to ({},{})",lng,lat)
+      log.debug("move bunny to ({},{})", lng, lat)
       bunny ! move
     }
   }

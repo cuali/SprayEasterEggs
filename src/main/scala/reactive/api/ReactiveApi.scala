@@ -7,15 +7,15 @@ import akka.actor.{ ActorSystem, Props }
 import akka.event.Logging.InfoLevel
 import spray.http.HttpRequest
 import spray.http.StatusCodes.{ MovedPermanently, NotFound }
-import spray.routing.{Directives, RouteConcatenation}
+import spray.routing.{ Directives, RouteConcatenation }
 import spray.routing.directives.LogEntry
 
 trait AbstractSystem {
-  implicit def system: ActorSystem
+  implicit def system : ActorSystem
 }
 
 trait ReactiveApi extends RouteConcatenation with StaticRoute with AbstractSystem {
-  this: MainActors =>
+  this : MainActors =>
 
   val rootService = system.actorOf(Props(classOf[RootService], routes))
   val socketService = system.actorOf(Props[SocketService])
@@ -29,7 +29,7 @@ trait ReactiveApi extends RouteConcatenation with StaticRoute with AbstractSyste
 }
 
 trait StaticRoute extends Directives {
-  this: AbstractSystem =>
+  this : AbstractSystem =>
 
   lazy val staticRoute =
     path("favicon.ico") {

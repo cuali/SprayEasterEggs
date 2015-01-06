@@ -11,14 +11,14 @@ import org.specs2.runner.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class HideServiceSpec extends Specification with Directives with Specs2RouteTest with MainActors with ReactiveApi {
   def actorRefFactory = system
-  
+
   "Reactive API" should {
     "hide bunny" in {
       Post("/hide").withEntity(HttpEntity(MediaTypes.`application/json`, """
           {"longitude" : "-38.4798", "latitude" : "-3.8093"}
           """)) ~> routes ~> check {
         status === StatusCodes.OK
-        responseAs[String] must === ("hidden")
+        responseAs[String] must ===("hidden")
       }
     }
   }

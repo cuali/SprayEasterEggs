@@ -1,16 +1,15 @@
 package reactive.socket
 
-import java.net.{InetSocketAddress, Socket, URI}
-
 import akka.actor.ActorSystem
-import akka.io.{IO, Tcp}
+import akka.io.{ IO, Tcp }
+import java.net.{ InetSocketAddress, Socket, URI }
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 import reactive.Configuration
-import reactive.api.{MainActors, ReactiveApi}
+import reactive.api.{ MainActors, ReactiveApi }
 import reactive.find.FindActor
 import reactive.hide.HideActor
 
@@ -33,15 +32,15 @@ class PlainSocketTest extends FunSuite with MainActors with ReactiveApi {
 
     var wsmsg = ""
     val wsf = new WebSocketClient(URI.create(s"ws://localhost:${Configuration.portWs}/find/ws")) {
-      override def onMessage(msg: String) {
+      override def onMessage(msg : String) {
         wsmsg = msg
       }
 
-      override def onOpen(hs: ServerHandshake) {}
+      override def onOpen(hs : ServerHandshake) {}
 
-      override def onClose(code: Int, reason: String, intentional: Boolean) {}
+      override def onClose(code : Int, reason : String, intentional : Boolean) {}
 
-      override def onError(ex: Exception) {}
+      override def onError(ex : Exception) {}
     }
     wsf.connect
 

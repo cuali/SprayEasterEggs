@@ -15,7 +15,7 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class WebSocketTest extends FunSuite with MainActors with ReactiveApi {
   implicit lazy val system = ActorSystem("reactive-system")
-  sys.addShutdownHook({system.shutdown})
+  sys.addShutdownHook({ system.shutdown })
   test("websocket connection") {
     val rs = new ReactiveServer(Configuration.portWs)
     rs.forResource("/find/ws", Some(find))
@@ -31,7 +31,7 @@ class WebSocketTest extends FunSuite with MainActors with ReactiveApi {
       }
       override def onOpen(hs : ServerHandshake) {}
       override def onClose(code : Int, reason : String, intentional : Boolean) {}
-      override def onError(ex : Exception) {println(ex.getMessage)}
+      override def onError(ex : Exception) { println(ex.getMessage) }
     }
     wsf.connect
     val wsh = new WebSocketClient(URI.create(s"ws://localhost:${Configuration.portWs}/hide/ws")) {

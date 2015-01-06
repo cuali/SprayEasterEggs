@@ -8,14 +8,14 @@ import java.util.UUID
 object MarkerActor {
   sealed trait MarkerMessage
   case object Stop extends MarkerMessage
-  case class Start(ws :WebSocket, marker :String) extends MarkerMessage
-  case class Move(longitude :String, latitude :String) extends MarkerMessage
+  case class Start(ws : WebSocket, marker : String) extends MarkerMessage
+  case class Move(longitude : String, latitude : String) extends MarkerMessage
 }
 class MarkerActor extends Actor with ActorLogging {
   import MarkerActor._
 
-  var marker :FindActor.Marker = _
-  var client :WebSocket = _
+  var marker : FindActor.Marker = _
+  var client : WebSocket = _
   override def receive = {
     case Stop => {
       context.actorSelection("/user/find") ! FindActor.Clear(marker)

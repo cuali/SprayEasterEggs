@@ -17,16 +17,17 @@ class HideService(hide : ActorRef)(implicit system : ActorSystem) extends Direct
         } ~
         post {
           handleWith {
-            move : MarkerActor.Move => 
+            move : MarkerActor.Move =>
               hide ! move
               "hidden"
           }
         }
       } ~
       path("ws") {
-        requestUri { uri =>
-          val wsUri = uri.withPort(Configuration.portWs)
-          redirect(wsUri, StatusCodes.PermanentRedirect)
+        requestUri {
+          uri =>
+            val wsUri = uri.withPort(Configuration.portWs)
+            redirect(wsUri, StatusCodes.PermanentRedirect)
         }
       } ~
       getFromResourceDirectory(dir)

@@ -6,7 +6,7 @@ import spray.http._
 
 class ReactiveApiSpec extends Specification with Specs2RouteTest with MainActors with ReactiveApi {
   def actorRefFactory = system
-  
+
   "Reactive API" should {
 
     "return the correct page for GET requests to the pages' path" in {
@@ -93,7 +93,7 @@ class ReactiveApiSpec extends Specification with Specs2RouteTest with MainActors
         mediaType must be(MediaTypes.`image/png`)
       }
     }
-    
+
     "redirect the GET requests to websocket paths" in {
       Get("/find/ws") ~> routes ~> check {
         status === StatusCodes.PermanentRedirect
