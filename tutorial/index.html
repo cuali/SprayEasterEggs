@@ -83,18 +83,20 @@
   rs.forResource("/hide/ws", Some(hide))
   rs.start</code></pre>
     <p>As the <code>ReactiveServer</code> registers at most one actor for each resource URL, it can forward to this actor the arguments to its <code>onMessage</code>, <code>onOpen</code>, <code>onClose</code> and <code>onError</code> methods, wrapped as <code>ReactiveServerMessage</code>.</p>
-    <pre><code>  private val reactors = Map[String, ActorRef]()
-  final def forResource(descriptor : String, reactor : Option[ActorRef]) {
-    reactor match {
-      case Some(actor) => reactors += ((descriptor, actor))
-      case None => reactors -= descriptor
+    <pre><code>  private val reactors = mutable.Map[String, ActorRef]()
+  final def forResource(descriptor : String, reactor : Option[ActorRef]) = {
+    if (null != descriptor) {
+      reactor match {
+        case Some(actor) => reactors += ((descriptor, actor))
+        case None        => reactors -= descriptor
+      }
     }
   }
-  final override def onMessage(ws : WebSocket, msg : String) {
+  final override def onMessage(ws : WebSocket, msg : String) = {
     if (null != ws) {
       reactors.get(ws.getResourceDescriptor) match {
         case Some(actor) => actor ! ReactiveServer.Message(ws, msg)
-        case None => ws.close(CloseFrame.REFUSE)
+        case None        => ws.close(CloseFrame.REFUSE)
       }
     }
   }</code></pre>
