@@ -1,31 +1,24 @@
-import play.core.PlayVersion.{current => playVersion}
+organization  := "cua.li"
 
-organization  := "cu.li"
+version       := "0.3"
 
-version       := "0.2.1"
-
-scalaVersion  := "2.11.4"
-
-resolvers ++= Seq(
-  "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
-  "Spray repository"    at "http://repo.spray.io/"
-)
+scalaVersion  := "2.10.4"
 
 libraryDependencies ++= {
-  val akkaV  = "2.3.6"
+  val akkaV  = "2.3.8"
   val sprayV = "1.3.2"
   Seq(
 //  "org.java-websocket"  %   "Java-WebSocket" % "1.3.1" withSources(),
     "io.spray"            %%  "spray-json"     % "1.3.1" withSources(),
-    "io.spray"            %%  "spray-can"      % sprayV withSources(),
-    "io.spray"            %%  "spray-routing"  % sprayV withSources(),
-    "com.typesafe.akka"   %%  "akka-actor"     % akkaV withSources(),
+    "io.spray"            %%  "spray-can"      % sprayV  withSources(),
+    "io.spray"            %%  "spray-routing"  % sprayV  withSources(),
+    "com.typesafe.akka"   %%  "akka-actor"     % akkaV   withSources(),
     //
     "com.typesafe.akka"   %%  "akka-testkit"   % akkaV    % "test" withSources(),
     "io.spray"            %%  "spray-testkit"  % sprayV   % "test" withSources(),
-    "org.scalatest"       %%  "scalatest"      % "2.2.2"  % "test" withSources(),
+    "org.scalatest"       %%  "scalatest"      % "2.2.3"  % "test" withSources(),
     "junit"               %   "junit"          % "4.12"   % "test",
-    "org.specs2"          %%  "specs2"         % "2.3.13" % "test"
+    "org.specs2"          %%  "specs2"         % "2.4.15" % "test"
   )
 }
 
