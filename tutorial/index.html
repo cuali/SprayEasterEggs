@@ -3,12 +3,12 @@
 <title>Spray and Websocket interfaces to actors - Activator Template</title>
 </head>
 <body>
-  <div><h2>The Goal</h2>
+  <div><h2>Goal overview</h2>
     <p>
     Some applications need to expose an API that will not only handle synchronous requests, but also open a websocket to asynchronously push new notifications to the visualization client and accept plain socket channels from other information feeders.
     This tutorial will explain how to implement an application that offers three different interfaces to its Akka actors: HTTP request, plain socket and websocket.
     </p>
-    <p style='text-align:center'><img src='architecture.png' style='border:0;width:100%;max-width:350px' /></p>
+    <p style='text-align:center'><img src='tutorial/architecture.png' style='border:0;width:100%;max-width:350px' /></p>
     <p>As an illustration, we will mimic an Easter eggs hunt, with one map for the various participants to hide their own egg and another map to find the hidden eggs.</p>
     <ul>
     <li>The system will be started by the <code><a href='#code/src/main/scala/reactive/ReactiveSystem.scala' class='shortcut'>ReactiveSystem</a></code> application object.</li>
@@ -17,8 +17,8 @@
     <li>The websockets will be handled by the <code><a href='#code/src/main/scala/reactive/socket/ReactiveServer.scala' class='shortcut'>ReactiveServer</a></code> websocket server.</li>
     <li>Some four more actors will perform the real work: <code><a href='#code/src/main/scala/reactive/socket/SocketActor.scala' class='shortcut'>SocketActor</a></code>, <code><a href='#code/src/main/scala/reactive/find/FindActor.scala' class='shortcut'>FindActor</a></code>, <code><a href='#code/src/main/scala/reactive/hide/HideActor.scala' class='shortcut'>HideActor</a></code> and <code><a href='#code/src/main/scala/reactive/hide/MarkerActor.scala' class='shortcut'>MarkerActor</a></code>.</li>
     </ul>
-    <p>The application will eventually present a visual interface such as the following screenshot:</p>
-    <p style='text-align:center'><img src='screenshot.png' style='border:0;width:100%;max-width:700px' /></p>
+    <p>The application will eventually present a <a href='http://localhost:9692/'>visual interface</a> such as the following screenshot when run with the <a href='#code/src/main/resources/application.conf' class='shortcut'>default configuration</a>:</p>
+    <p style='text-align:center'><img src='tutorial/screenshot.png' style='border:0;width:100%;max-width:700px' /></p>
   </div>
   <div><h2>Splitting up the API into services</h2>
     <h3>Required resources</h3>
@@ -98,7 +98,7 @@
       }
     }
   }</code></pre>
-    <p>Note that there is no way to force the registered actor to correctly handle the four messages defining the protocol in the <code>ReactiveServer</code> companion object.</p>
+    <p><b>Note</b> that there is no way to force the registered actor to correctly handle the four messages defining the protocol in the <code>ReactiveServer</code> companion object.</p>
     <pre><code>object ReactiveServer {
   sealed trait ReactiveServerMessage
   case class Message(ws : WebSocket, msg : String)
@@ -269,7 +269,9 @@ class HideServiceSpec extends Specification with Directives with Specs2RouteTest
     assert(None != first.findFirstIn(wsmsg))</code></pre>
   </div>
   <div><h2>Summary</h2>
-    <p></p>
+    <p>This tutorial exposed a solution to implement an application that offers three different kind of interfaces to its Akka actors:
+    HTTP request, plain socket and websocket.</p>
+    <p>Testing such an architecture involves testing every distinct service and the routes which lead to the static resources.  Strategies to organize the tests have been presented.</p>
   </div>
   <div><h2>Next Steps</h2>
     <p>Further reading for more elaborated architectures are the following Activator templates:</p>

@@ -25,14 +25,14 @@ Follow these steps to get started:
 
         > re-start
 
-6. Browse to http://localhost:9692/
-6a. Call your friends or colleagues to access your server.
-6b. Open more tabs in your browser to http://localhost:9692/hide
+6. Browse to [http://localhost:9692/](http://localhost:9692/)
+    1. Call your friends or colleagues to access your server.
+    2. Open more tabs in your browser to [http://localhost:9692/hide](http://localhost:9692/hide)
 
 7. Stop the application:
 
         > re-stop
 
-8. Learn more at http://www.spray.io/
+8. Learn more at [http://www.spray.io/](http://www.spray.io/)
 
 9. Start hacking on `src/main/scala/cua/li/reactive/ReactiveSystem.scala`
