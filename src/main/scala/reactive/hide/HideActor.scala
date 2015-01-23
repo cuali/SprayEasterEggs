@@ -1,8 +1,7 @@
 package reactive.hide
 
-import reactive.socket.ReactiveServer
+import reactive.websocket.WebSocket
 import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
-import org.java_websocket.WebSocket
 import scala.collection.mutable
 
 object HideActor {
@@ -11,51 +10,44 @@ object HideActor {
   case class Unregister(ws : WebSocket) extends HideMessage
 }
 class HideActor extends Actor with ActorLogging {
-  import HideActor._
-  import MarkerActor._
-  import ReactiveServer._
-
   val bunny = context.actorOf(Props[MarkerActor])
-  bunny ! Start(null, "B")
+  bunny ! MarkerActor.Start(null, "B")
   val markers = mutable.Map[WebSocket, ActorRef]()
   override def receive = {
-    case Open(ws, hs) => {
+    case WebSocket.Open(ws) =>
       val idx = (markers.size % 10).toString
       val marker = context.actorOf(Props(classOf[MarkerActor]))
       markers += ((ws, marker))
       log.debug("registered marker {}", idx)
-      marker ! Start(ws, idx)
-    }
-    case Close(ws, code, reason, ext) => {
-      self ! Unregister(ws)
-    }
-    case Error(ws, ex) => {
-      self ! Unregister(ws)
-    }
-    case Message(ws, msg) => {
+      marker ! MarkerActor.Start(ws, idx)
+    case WebSocket.Close(ws, code, reason) =>
+      self ! HideActor.Unregister(ws)
+    case WebSocket.Error(ws, ex) =>
+      self ! HideActor.Unregister(ws)
+    case WebSocket.Message(ws, msg) =>
       val coords = msg.split(" ")
       val lng = coords(0)
       val lat = coords(1)
       log.debug("move marker to ({},{})", lng, lat)
-      markers(ws) ! Move(lng, lat)
-    }
-    case Clear => {
+      markers(ws) ! MarkerActor.Move(lng, lat)
+    case HideActor.Clear =>
       for (marker <- markers) {
-        marker._2 ! Stop
+        marker._2 ! MarkerActor.Stop
       }
       markers.clear
-    }
-    case Unregister(ws) => {
+    case HideActor.Unregister(ws) =>
       if (null != ws) {
         log.debug("unregister marker")
         val marker = markers(ws)
         markers remove ws
-        marker ! Stop
+        marker ! MarkerActor.Stop
       }
-    }
-    case move @ Move(lng, lat) => {
+    case move @ MarkerActor.Move(lng, lat) =>
       log.debug("move bunny to ({},{})", lng, lat)
       bunny ! move
-    }
+    case MarkerActor.Stop =>
+      log.debug("marker {} stopped", sender)
+    case whatever =>
+      log.warning("Hiding '{}'", whatever)
   }
 }

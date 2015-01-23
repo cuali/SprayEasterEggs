@@ -1,24 +1,36 @@
 organization  := "cua.li"
 
-version       := "0.3"
+version       := "0.4"
 
-scalaVersion  := "2.10.4"
+scalaVersion  := "2.11.5"
 
 libraryDependencies ++= {
-  val akkaV  = "2.3.8"
+  val akkaV  = "2.3.9"
   val sprayV = "1.3.2"
+  val kamonV = "0.3.5"
+  val aspectV = "1.8.4"
   Seq(
-//  "org.java-websocket"  %   "Java-WebSocket" % "1.3.1" withSources(),
-    "io.spray"            %%  "spray-json"     % "1.3.1" withSources(),
-    "io.spray"            %%  "spray-can"      % sprayV  withSources(),
-    "io.spray"            %%  "spray-routing"  % sprayV  withSources(),
-    "com.typesafe.akka"   %%  "akka-actor"     % akkaV   withSources(),
-    //
-    "com.typesafe.akka"   %%  "akka-testkit"   % akkaV    % "test" withSources(),
-    "io.spray"            %%  "spray-testkit"  % sprayV   % "test" withSources(),
-    "org.scalatest"       %%  "scalatest"      % "2.2.3"  % "test" withSources(),
-    "junit"               %   "junit"          % "4.12"   % "test",
-    "org.specs2"          %%  "specs2"         % "2.4.15" % "test"
+    "com.wandoulabs.akka" %%  "spray-websocket"       % "0.1.3"           withSources() withJavadoc,
+    "io.spray"            %%  "spray-json"            % "1.3.1"           withSources() withJavadoc,
+    "io.spray"            %%  "spray-can"             % sprayV            withSources() withJavadoc,
+    "io.spray"            %%  "spray-routing"         % sprayV            withSources() withJavadoc,
+    "com.typesafe.akka"   %%  "akka-actor"            % akkaV             withSources() withJavadoc,
+    "com.typesafe.akka"   %%  "akka-slf4j"            % akkaV             withSources() withJavadoc,
+    //*
+    "io.kamon"            %%  "kamon-core"            % kamonV            withSources() withJavadoc,
+    "io.kamon"            %%  "kamon-spray"           % kamonV            withSources() withJavadoc,
+    "io.kamon"            %%  "kamon-statsd"          % kamonV            withSources() withJavadoc,
+    "io.kamon"            %%  "kamon-log-reporter"    % kamonV            withSources() withJavadoc,
+    "io.kamon"            %%  "kamon-system-metrics"  % kamonV            withSources() withJavadoc,
+    "org.aspectj"         %   "aspectjweaver"         % aspectV           withSources() withJavadoc,
+    "io.kamon"            %%  "kamon-testkit"         % kamonV   % "test" withSources() withJavadoc,
+    // */
+    "com.typesafe.akka"   %%  "akka-testkit"          % akkaV    % "test" withSources() withJavadoc,
+    "io.spray"            %%  "spray-testkit"         % sprayV   % "test" withSources() withJavadoc,
+    "org.scalatest"       %%  "scalatest"             % "2.2.3"  % "test",
+    "junit"               %   "junit"                 % "4.12"   % "test",
+    "org.specs2"          %%  "specs2"                % "2.4.15" % "test",
+    "ch.qos.logback"      %   "logback-classic"       % "1.1.2"
   )
 }
 
@@ -31,8 +43,6 @@ doc in Compile <<= target.map(_ / "none")
 
 publishArtifact in (Compile, packageSrc) := false
 
-//sublimeTransitive := true
-
 logBuffered in Test := false
 
 Keys.fork in Test := false
@@ -41,3 +51,10 @@ parallelExecution in Test := false
 
 seq(Revolver.settings: _*)
 
+import com.typesafe.sbt.SbtAspectj._
+
+aspectjSettings
+
+fork in run := true
+
+javaOptions <++= AspectjKeys.weaverOptions in Aspectj

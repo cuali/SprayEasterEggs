@@ -20,9 +20,10 @@ class SocketActor(val connection : ActorRef) extends Actor with ActorLogging {
     case Tcp.Closed          => stop()
     case Tcp.ConfirmedClosed => stop()
     case Tcp.Aborted         => stop()
+    case MarkerActor.Stop =>
+      context stop self
   }
   private def stop() = {
     marker ! MarkerActor.Stop
-    context stop self
   }
 }

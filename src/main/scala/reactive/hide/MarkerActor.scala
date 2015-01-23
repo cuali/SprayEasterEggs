@@ -1,8 +1,8 @@
 package reactive.hide
 
 import reactive.find.FindActor
+import reactive.websocket.WebSocket
 import akka.actor.{ Actor, ActorLogging, PoisonPill }
-import org.java_websocket.WebSocket
 import java.util.UUID
 
 object MarkerActor {
@@ -19,7 +19,8 @@ class MarkerActor extends Actor with ActorLogging {
   override def receive = {
     case Stop => {
       context.actorSelection("/user/find") ! FindActor.Clear(marker)
-      self ! PoisonPill
+      sender ! Stop
+      context stop self
     }
     case Start(ws, idx) => {
       client = ws

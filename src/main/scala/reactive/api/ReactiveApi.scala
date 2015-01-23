@@ -2,9 +2,11 @@ package reactive.api
 
 import reactive.find.FindService
 import reactive.hide.HideService
-import reactive.socket.SocketService
+import reactive.socket.{ SocketService }
+import reactive.websocket.WebSocketServer
 import akka.actor.{ ActorSystem, Props }
 import akka.event.Logging.InfoLevel
+import scala.reflect.ClassTag
 import spray.http.HttpRequest
 import spray.http.StatusCodes.{ MovedPermanently, NotFound }
 import spray.routing.{ Directives, RouteConcatenation }
@@ -16,16 +18,21 @@ trait AbstractSystem {
 
 trait ReactiveApi extends RouteConcatenation with StaticRoute with AbstractSystem {
   this : MainActors =>
+  private def showReq(req : HttpRequest) = LogEntry(req.uri, InfoLevel)
 
-  val rootService = system.actorOf(Props(classOf[RootService], routes))
-  val socketService = system.actorOf(Props[SocketService])
-
+  val rootService = system.actorOf(Props(new RootService[BasicRouteActor](routes)), "routes")
   lazy val routes = logRequest(showReq _) {
     new FindService(find).route ~
     new HideService(hide).route ~
     staticRoute
   }
-  private def showReq(req : HttpRequest) = LogEntry(req.uri, InfoLevel)
+  val wsService = system.actorOf(Props(new RootService[WebSocketServer](wsroutes)), "wss")
+  lazy val wsroutes = logRequest(showReq _) {
+    new FindService(find).wsroute ~
+    new HideService(hide).wsroute ~
+    complete(NotFound)
+  }
+  val socketService = system.actorOf(Props[SocketService], "tcp")
 }
 
 trait StaticRoute extends Directives {

@@ -8,13 +8,13 @@
     Some applications need to expose an API that will not only handle synchronous requests, but also open a websocket to asynchronously push new notifications to the visualization client and accept plain socket channels from other information feeders.
     This tutorial will explain how to implement an application that offers three different interfaces to its Akka actors: HTTP request, plain socket and websocket.
     </p>
-    <p style='text-align:center'><img src='tutorial/architecture.png' style='border:0;width:100%;max-width:350px' /></p>
+    <p style='text-align:center'><img src='tutorial/architecture.png' style='border:0;width:100%;max-width:380px' /></p>
     <p>As an illustration, we will mimic an Easter eggs hunt, with one map for the various participants to hide their own egg and another map to find the hidden eggs.</p>
     <ul>
     <li>The system will be started by the <code><a href='#code/src/main/scala/reactive/ReactiveSystem.scala' class='shortcut'>ReactiveSystem</a></code> application object.</li>
     <li>The HTTP requests will be handled by the routes defined in the <code><a href='#code/src/main/scala/reactive/api/ReactiveApi.scala' class='shortcut'>ReactiveApi</a></code> and its associated services <code><a href='#code/src/main/scala/reactive/find/FindService.scala' class='shortcut'>FindService</a></code> and <code><a href='#code/src/main/scala/reactive/hide/HideService.scala' class='shortcut'>HideService</a></code>.</li>
     <li>The plain sockets will be handled by the <code><a href='#code/src/main/scala/reactive/socket/SocketService.scala' class='shortcut'>SocketService</a></code> actor.</li>
-    <li>The websockets will be handled by the <code><a href='#code/src/main/scala/reactive/socket/ReactiveServer.scala' class='shortcut'>ReactiveServer</a></code> websocket server.</li>
+    <li>The websockets will be handled by the <code><a href='#code/src/main/scala/reactive/websocket/WebSocketServer.scala' class='shortcut'>WebSocketServer</a></code> websocket server.</li>
     <li>Some four more actors will perform the real work: <code><a href='#code/src/main/scala/reactive/socket/SocketActor.scala' class='shortcut'>SocketActor</a></code>, <code><a href='#code/src/main/scala/reactive/find/FindActor.scala' class='shortcut'>FindActor</a></code>, <code><a href='#code/src/main/scala/reactive/hide/HideActor.scala' class='shortcut'>HideActor</a></code> and <code><a href='#code/src/main/scala/reactive/hide/MarkerActor.scala' class='shortcut'>MarkerActor</a></code>.</li>
     </ul>
     <p>The application will eventually present a <a href='http://localhost:9692/'>visual interface</a> such as the following screenshot when run with the <a href='#code/src/main/resources/application.conf' class='shortcut'>default configuration</a>:</p>
@@ -56,7 +56,7 @@
     <li>the <code><a href='#code/src/main/scala/reactive/find/FindService.scala' class='shortcut'>FindService</a></code> defines the routes to static resources (<code><a href='#code/src/main/resources/find/index.html' class='shortcut'>index.html</a></code> and <code><a href='#code/src/main/resources/find/find.js' class='shorcut'>find.js</a></code>) for the map;</li>
     <li>the <code><a href='#code/src/main/scala/reactive/hide/HideService.scala' class='shortcut'>HideService</a></code> defines the routes to static resources (<code><a href='#code/src/main/resources/hide/index.html' class='shortcut'>index.html</a></code> and <code><a href='#code/src/main/resources/hide/hide.js' class='shorcut'>hide.js</a></code>) for the map, as well as an HTTP-based (REST-like) webservice;</li>
     <li>the <code><a href='#code/src/main/scala/reactive/api/RootService.scala' class='shortcut'>RootService</a></code> handles the static routes to common stuff, as well as the routing to the above two services;</li>
-    <li>the <code><a href='#code/src/main/scala/reactive/socket/ReactiveServer.scala' class='shortcut'>ReactiveServer</a></code> websockets server is not <i>(yet)</i> a Spray service as the above four other services.</li>
+    <li>the <code><a href='#code/src/main/scala/reactive/websocket/WebSocketServer.scala' class='shortcut'>WebSocketServer</a></code> websockets server is a Spray service as the above four other services.</li>
     </ol>
     <p>The <code><a href='#code/src/main/scala/reactive/ReactiveSystem.scala' class='shortcut'>ReactiveSystem</a></code> application object is responsible for initializing the actor system, the websockets' server, the plain socket listener actor and the HTTP request listener actor.</p>
   </div>
@@ -76,65 +76,77 @@
       }</code></pre>
   </div>
   <div><h2>Websocket service</h2>
-    <p>The <code><a href='#code/src/main/scala/reactive/socket/ReactiveServer.scala' class='shortcut'>ReactiveServer</a></code> websockets' server is not (yet) a Spray service since the <a href='https://github.com/lihaoyi/SprayWebSockets'>SprayWebSockets</a> library does not yet offer the ease of use of the RFC6455 basic methods.</p>
-    <p>The <code>ReactiveServer</code> allows for registration of several actors reacting each one to its own resource URL.</p>
-    <pre><code>  private val rs = new ReactiveServer(Configuration.portWs)
-  rs.forResource("/find/ws", Some(find))
-  rs.forResource("/hide/ws", Some(hide))
-  rs.start</code></pre>
-    <p>As the <code>ReactiveServer</code> registers at most one actor for each resource URL, it can forward to this actor the arguments to its <code>onMessage</code>, <code>onOpen</code>, <code>onClose</code> and <code>onError</code> methods, wrapped as <code>ReactiveServerMessage</code>.</p>
-    <pre><code>  private val reactors = mutable.Map[String, ActorRef]()
-  final def forResource(descriptor : String, reactor : Option[ActorRef]) = {
-    if (null != descriptor) {
-      reactor match {
-        case Some(actor) => reactors += ((descriptor, actor))
-        case None        => reactors -= descriptor
-      }
-    }
-  }
-  final override def onMessage(ws : WebSocket, msg : String) = {
-    if (null != ws) {
-      reactors.get(ws.getResourceDescriptor) match {
-        case Some(actor) => actor ! ReactiveServer.Message(ws, msg)
-        case None        => ws.close(CloseFrame.REFUSE)
-      }
-    }
+    <p>The <code><a href='#code/src/main/scala/reactive/websocket/WebSocketServer.scala' class='shortcut'>WebSocketServer</a></code> websockets' server is a Spray service using the <a href='https://github.com/wandoulabs/spray-websocket/'>WebSocket for spray-can</a> despite its lacking the ease of use of the RFC6455 basic methods.</p>
+    <p>The <code>WebSocketServer</code> allows for registration of several actors reacting each one to its own resource URL, in much the same way as the routes are usually defined with Spray.</p>
+    <pre><code>  val wsService = system.actorOf(Props(new RootService[WebSocketServer](wsroutes)), "wss")
+  lazy val wsroutes = logRequest(showReq _) {
+    new FindService(find).wsroute ~
+    new HideService(hide).wsroute ~
+    complete(NotFound)
   }</code></pre>
-    <p><b>Note</b> that there is no way to force the registered actor to correctly handle the four messages defining the protocol in the <code>ReactiveServer</code> companion object.</p>
-    <pre><code>object ReactiveServer {
-  sealed trait ReactiveServerMessage
-  case class Message(ws : WebSocket, msg : String)
-    extends ReactiveServerMessage
-  case class Open(ws : WebSocket, hs : ClientHandshake)
-    extends ReactiveServerMessage
-  case class Close(ws : WebSocket, code : Int, reason : String, external : Boolean)
-    extends ReactiveServerMessage
-  case class Error(ws : WebSocket, ex : Exception)
-    extends ReactiveServerMessage
+    <pre><code>  IO(UHttp) ! Http.Bind(wsService, Configuration.host, Configuration.portWs)</code></pre>
+    <p>As the <code>WebSocketServer</code> registers at most one actor for each resource URL, it can forward to this actor the incoming web socket's <code>TextFrame</code> as <code>Message</code>, web socket's <code>CloseFrame</code> and HTTP's <code>Http.ConnectionClosed</code> as <code>Close</code> as well as HTTP's <code>Http.ErrorClosed</code> as <code>Error</code>, thus getting closer to the RFC6455 methods through the use of <code>ReactiveServerMessage</code>.</p>
+    <pre><code>  // this is the actor's behavior after the WebSocket handshaking resulted in an upgraded request 
+  override def businessLogic = {
+    case TextFrame(message) =>
+      ping
+      handler ! WebSocket.Message(this, message.utf8String)
+// ...
+    case Http.ErrorClosed(cause) =>
+      handler ! WebSocket.Error(this, cause)
+    case CloseFrame(status, reason) =>
+      handler ! WebSocket.Close(this, status.code, reason)
+    case Http.Closed =>
+      handler ! WebSocket.Close(this, StatusCode.NormalClose.code, "")
+// ...
+  }</code></pre>
+    <p><b>Note</b> that there is no way to force the registered <code>handler</code> actor to correctly handle the four messages defining the server-side protocol in the <code>WebSocket</code> companion object.</p>
+    <pre><code>object WebSocket {
+  sealed trait WebSocketMessage
+  case class Open(ws : WebSocket) extends WebSocketMessage
+  case class Message(ws : WebSocket, msg : String) extends WebSocketMessage
+  case class Close(ws : WebSocket, code : Int, reason : String) extends WebSocketMessage
+  case class Error(ws : WebSocket, reason : String) extends WebSocketMessage
 }</code></pre>
   </div>
   <div><h2>HTTP services</h2>
     <p>Let's explore the <code><a href='#code/src/main/scala/reactive/api/ReactiveApi.scala' class='shortcut'>ReactiveApi</a></code> trait, which defines the REST endpoints. In keeping with the structure exposed above, each endpoint has been kept in its own class. The <code>ReactiveApi</code> trait constructs the classes for these endpoints and then concatenates their respective routes.</p>
     <pre><code>trait ReactiveApi extends RouteConcatenation with StaticRoute with AbstractSystem {
-  this: MainActors =>
+  this : MainActors =>
+  private def showReq(req : HttpRequest) = LogEntry(req.uri, InfoLevel)
 
-  val rootService = system.actorOf(Props(classOf[RootService], routes))
-  val socketService = system.actorOf(Props[SocketService])
-
+  val rootService = system.actorOf(Props(new RootService[BasicRouteActor](routes)), "routes")
   lazy val routes = logRequest(showReq _) {
     new FindService(find).route ~
     new HideService(hide).route ~
     staticRoute
   }
-  private def showReq(req : HttpRequest) = LogEntry(req.uri, InfoLevel)
+  val wsService = system.actorOf(Props(new RootService[WebSocketServer](wsroutes)), "wss")
+  lazy val wsroutes = logRequest(showReq _) {
+    new FindService(find).wsroute ~
+    new HideService(hide).wsroute ~
+    complete(NotFound)
+  }
+  val socketService = system.actorOf(Props[SocketService], "tcp")
 }</code></pre>
     <p>The <code><a href='#code/src/main/scala/reactive/api/RootService.scala' class='shortcut'>RootService</a></code> then routes the incoming HTTP requests accordingly.</p>
-    <pre><code>class RootService(route : Route) extends Actor with HttpService with ActorLogging {
-  implicit def actorRefFactory = context
-  def receive = runRoute(route)
+    <pre><code>class RootService[RA <: RouteActor](val route : Route)(implicit tag : ClassTag[RA]) extends HttpServiceActor with ActorLogging {
+  override def receive = {
+    case connected : Http.Connected =>
+      // implement the "per-request actor" pattern
+      sender ! Http.Register(context.actorOf(Props(tag.runtimeClass, sender, route)))
+    case whatever => log.debug("RootService got some {}", whatever)
+  }
+}
+trait RouteActor extends HttpServiceActor {
+  def connection : ActorRef
+  def route : Route
+}
+private[api] class BasicRouteActor(val connection : ActorRef, val route : Route) extends RouteActor {
+  override def receive = runRoute(route)
 }</code></pre>
-    <p>Since the <code><a href='#code/src/main/scala/reactive/find/FindService.scala' class='shortcut'>FindService</a></code> is rather simple, let's study the <code><a href='#code/src/main/scala/reactive/hide/HideService.scala' class='shortcut'>HideService</a></code> implementation.</p>
-    <pre><code>class HideService(hide : ActorRef)(implicit system : ActorSystem) extends Directives with ApplicationJsonFormats {
+    <p>Since the <code><a href='#code/src/main/scala/reactive/find/FindService.scala' class='shortcut'>FindService</a></code> is rather simple, let's study the <code><a href='#code/src/main/scala/reactive/hide/HideService.scala' class='shortcut'>HideService</a></code> implementation instead.</p>
+    <pre><code>class HideService(val hide : ActorRef)(implicit system : ActorSystem) extends Directives with ApplicationJsonFormats {
   private implicit val moveFormat = jsonFormat2(MarkerActor.Move)
   lazy val route =
     pathPrefix("hide") {
@@ -145,7 +157,7 @@
         } ~
         post {
           handleWith {
-            move : MarkerActor.Move => 
+            move : MarkerActor.Move =>
               hide ! move
               "hidden"
           }
@@ -154,10 +166,18 @@
       path("ws") {
         requestUri { uri =>
           val wsUri = uri.withPort(Configuration.portWs)
+          system.log.debug("redirect {} to {}", uri, wsUri)
           redirect(wsUri, StatusCodes.PermanentRedirect)
         }
       } ~
       getFromResourceDirectory(dir)
+    }
+  lazy val wsroute = 
+    pathPrefix("hide") {
+      path("ws") {
+        implicit ctx =>
+          ctx.responder ! WebSocket.Register(ctx.request, hide, true)
+      }
     }
 }</code></pre>
     <p>This service will handle all requests under the <code>/hide</code> path prefix. For the <code>/hide/ws</code> path, it will redirect the request to the websocket port. A special treatment is reserved to the <code>/hide/</code> path. For all other URL, it will try to serve the named resource from the <code><a href='#code/src/main/resources/hide/' class='shortcut'>hide</a></code> resources directory.</p>
@@ -174,39 +194,68 @@
     "return the correct page for GET requests to the pages' path" in {
       Get() ~> routes ~> check {
         status === StatusCodes.OK
-        responseAs[String] must contain("Easter Eggs")
+        responseAs[String] must contain ("Easter Eggs")
       }
       Get("/") ~> routes ~> check {
         status === StatusCodes.OK
-        responseAs[String] must contain("Easter Eggs")
+        responseAs[String] must contain ("Easter Eggs")
       }
       Get("/find") ~> routes ~> check {
         status === StatusCodes.OK
-        responseAs[String] must contain("-- Find")
-        responseAs[String] must contain("find.js")
-        responseAs[String] must contain("href='/find/'>Reload")
+        responseAs[String] must contain ("-- Find")
+        responseAs[String] must contain ("find.js")
+        responseAs[String] must contain (">Find<")
       }
       Get("/hide") ~> routes ~> check {
         status === StatusCodes.OK
-        responseAs[String] must contain("-- Hide")
-        responseAs[String] must contain("hide.js")
-        responseAs[String] must contain("href='/hide/'>Reload")
+        responseAs[String] must contain ("-- Hide")
+        responseAs[String] must contain ("hide.js")
+        responseAs[String] must contain (">Hide<")
       }
     }
-    // many other tests omitted
+    "return the javascripts for GET requests to the js files" in {
+      Get("/find/find.js") ~> routes ~> check {
+        status === StatusCodes.OK
+        responseAs[String] must contain ("function")
+      }
+      Get("/hide/hide.js") ~> routes ~> check {
+        status === StatusCodes.OK
+        responseAs[String] must contain ("function")
+      }
+    }
+    "return the image for GET requests to the markers files" in {
+      Get("/markers/marker0.png") ~> routes ~> check {
+        status === StatusCodes.OK
+        mediaType must be (MediaTypes.`image/png`)
+      }
+      // ...
+      Get("/markers/markerC.png") ~> routes ~> check {
+        status === StatusCodes.OK
+        mediaType must be (MediaTypes.`image/png`)
+      }
+    }
+    "redirect the GET requests to websocket paths" in {
+      Get("/find/ws") ~> routes ~> check {
+        status === StatusCodes.PermanentRedirect
+      }
+      Get("/hide/ws") ~> routes ~> check {
+        status === StatusCodes.PermanentRedirect
+      }
+    }
     "leave GET requests to unknown paths unhandled" in {
       Get("/play") ~> routes ~> check {
         status === StatusCodes.NotFound
       }
     }
-  }</code></pre>
+  }
+}</code></pre>
     <h3>Testing the services</h3>
     <p>As the availability of the <code>ReactiveApi</code> does not depend on the system instantiation, this enables to write tests that exercise just that API.</p>
     <p>Building HTTP request and passing them to the <code>routes</code> is very similar to the case for static resources. The main differences may be the necessity to build the entity body or to add credentials headers, before handing the request object to the <code>routes</code>.</p>
     <pre><code>@RunWith(classOf[JUnitRunner])
 class HideServiceSpec extends Specification with Directives with Specs2RouteTest with MainActors with ReactiveApi {
   def actorRefFactory = system
-  
+
   "Reactive API" should {
     "hide bunny" in {
       Post("/hide").withEntity(HttpEntity(MediaTypes.`application/json`, """
@@ -220,47 +269,50 @@ class HideServiceSpec extends Specification with Directives with Specs2RouteTest
 }</code></pre>
     <h3>Testing the websocket service</h3>
     <p>In order to test the websocket service, we need to start the server from within the test.</p>
-    <pre><code>class WebSocketTest extends FunSuite with MainActors with ReactiveApi {
-  implicit lazy val system = ActorSystem("reactive-system")
-  sys.addShutdownHook({system.shutdown})
+    <pre><code>@RunWith(classOf[JUnitRunner])
+class WebSocketTest extends FunSuite with MainActors with ReactiveApi {
+  implicit lazy val system = ActorSystem("reactive-socket-WebSocketTest")
+  sys.addShutdownHook({ system.shutdown })
   test("websocket connection") {
-    val rs = new ReactiveServer(Configuration.portWs)
-    rs.forResource("/find/ws", Some(find))
-    rs.forResource("/hide/ws", Some(hide))
-    rs.start</code></pre>
-    <p>Then we can start one websocket to each service.</p>
+    val wss = system.actorOf(Props(new RootService[WebSocketServer](new FindService(find).wsroute ~ new HideService(hide).wsroute)), "wswss")
+    IO(UHttp) ! Http.Bind(wss, Configuration.host, Configuration.portWs)
+    Thread.sleep(2000L) // wait for all servers to be cleanly started</code></pre>
+    <p>Then we can start one websocket client to each service.</p>
     <pre><code>    var wsmsg = ""
-    val wsf = new WebSocketClient(URI.create(s"ws://localhost:${Configuration.portWs}/find/ws")) {
-      override def onMessage(msg : String) {
-        wsmsg = msg
+    val wsf = system.actorOf(Props(new TestingWebSocketClient {
+      override def businessLogic = {
+        case WebSocket.Release => close
+        case TextFrame(msg) => wsmsg = msg.utf8String
+        case whatever => // ignore
       }
-      override def onOpen(hs : ServerHandshake) {}
-      override def onClose(code : Int, reason : String, intentional : Boolean) {}
-      override def onError(ex : Exception) {println(ex.getMessage)}
-    }
-    wsf.connect
-    val wsh = new WebSocketClient(URI.create(s"ws://localhost:${Configuration.portWs}/hide/ws")) {
-      override def onMessage(msg : String) {}
-      override def onOpen(hs : ServerHandshake) {}
-      override def onClose(code : Int, reason : String, intentional : Boolean) {}
-      override def onError(ex : Exception) {}
-    }
-    wsh.connect</code></pre>
+    }))
+    wsf ! WebSocket.Connect(Configuration.host, Configuration.portWs, "/find/ws")
+    val wsh = system.actorOf(Props(new TestingWebSocketClient {
+      override def businessLogic = {
+        case WebSocket.Send(message) =>
+          log.info("Client sending message {}", message)
+          send(message)
+        case WebSocket.Release => close
+        case whatever => // ignore
+      }
+    }))
+    wsh ! WebSocket.Connect(Configuration.host, Configuration.portWs, "/hide/ws")</code></pre>
     <p>And only then we can really perform the tests, sending some messages through the websocket linked to the hide service and checking for the correct answer from the websocket linked to the find service.</p>
-    <pre><code>    wsh.send("2.1523721 41.4140567")
+    <pre><code>    wsh ! WebSocket.Send("2.1523721 41.4140567")
     Thread.sleep(1000L)
     val first = """\{"move":\{"id":"[-0-9a-f]+","idx":"0","longitude":2\.1523721,"latitude":41\.4140567\}\}""".r
     assert(None != first.findFirstIn(wsmsg))</code></pre>
     <h3>Testing the plain socket service</h3>
     <p>Testing the plain socket service will be very similar, but instead of starting the websocket listener actor for the hide service, we will start the plain socket service.</p>
-    <pre><code>class PlainSocketTest extends FunSuite with MainActors with ReactiveApi {
-  implicit lazy val system = ActorSystem("reactive-system")
-  sys.addShutdownHook({system.shutdown})
+    <pre><code>@RunWith(classOf[JUnitRunner])
+class PlainSocketTest extends FunSuite with MainActors with ReactiveApi {
+  implicit lazy val system = ActorSystem("reactive-socket-PlainSocketTest")
+  sys.addShutdownHook({ system.shutdown })
   test("pure socket connection") {
-    val rs = new ReactiveServer(Configuration.portWs)
-    rs.forResource("/find/ws", Some(find))
-    rs.start
-    IO(Tcp) ! Tcp.Bind(socketService, new InetSocketAddress(Configuration.host, Configuration.portTcp))</code></pre>
+    val wss = system.actorOf(Props(new RootService[WebSocketServer](new FindService(find).wsroute)), "pswss")
+    IO(UHttp) ! Http.Bind(wss, Configuration.host, Configuration.portWs)
+    IO(Tcp) ! Tcp.Bind(socketService, new InetSocketAddress(Configuration.host, Configuration.portTcp))
+    Thread.sleep(2000L) // wait for all servers to be cleanly started</code></pre>
       <p>The tests will then be performed by sending some messages through a socket to our hide service and checking for the correct answer from the websocket linked to the find service.</p>
       <pre><code>    val conn = new Socket
     conn.connect(new InetSocketAddress("localhost", Configuration.portTcp))
@@ -281,6 +333,8 @@ class HideServiceSpec extends Specification with Directives with Specs2RouteTest
     <li><a href='http://typesafe.com/activator/template/activator-akka-spray'>Akka and Spray</a> (<a href='https://github.com/eigengo/activator-akka-spray'>source code</a>)</li>
     <li><a href='http://typesafe.com/activator/template/spray-actor-per-request'>Actor per-request model with spray</a> (<a href='https://github.com/NET-A-PORTER/spray-actor-per-request#master'>source code</a>)</li>
     <li><a href='http://typesafe.com/activator/template/tcp-async'>Akka IO over TCP, Spray and MySQL Reactive</a> (<a href='https://github.com/vngrs/tcp-async'>source code</a>)</li>
+    <li><a href='http://typesafe.com/activator/template/snakeyard'>Reactive Snake - Akka Actor and Web Socket Example</a> (<a href='https://github.com/stanska/snakeyard'>source code</a>)</li>
+    <li><a href='http://typesafe.com/activator/template/reactive-stocks'>Reactive Stocks</a> (<a href='https://github.com/typesafehub/reactive-stocks'>source code</a>)</li>
     </ul>
   </div>
 </body>

@@ -8,6 +8,7 @@ class SocketService extends Actor with ActorLogging {
     case Tcp.CommandFailed(_ : Tcp.Bind) =>
       context stop self
     case Tcp.Connected(remote, local) =>
+      // implement the "per-request actor" pattern
       sender ! Tcp.Register(context.actorOf(Props(classOf[SocketActor], sender)))
   }
 }

@@ -2,11 +2,12 @@ package reactive.hide
 
 import reactive.Configuration
 import reactive.api.ApplicationJsonFormats
+import reactive.websocket.WebSocket
 import akka.actor.{ ActorRef, ActorSystem }
 import spray.http.StatusCodes
 import spray.routing.Directives
 
-class HideService(hide : ActorRef)(implicit system : ActorSystem) extends Directives with ApplicationJsonFormats {
+class HideService(val hide : ActorRef)(implicit system : ActorSystem) extends Directives with ApplicationJsonFormats {
   private implicit val moveFormat = jsonFormat2(MarkerActor.Move)
   lazy val route =
     pathPrefix("hide") {
@@ -24,12 +25,19 @@ class HideService(hide : ActorRef)(implicit system : ActorSystem) extends Direct
         }
       } ~
       path("ws") {
-        requestUri {
-          uri =>
-            val wsUri = uri.withPort(Configuration.portWs)
-            redirect(wsUri, StatusCodes.PermanentRedirect)
+        requestUri { uri =>
+          val wsUri = uri.withPort(Configuration.portWs)
+          system.log.debug("redirect {} to {}", uri, wsUri)
+          redirect(wsUri, StatusCodes.PermanentRedirect)
         }
       } ~
       getFromResourceDirectory(dir)
+    }
+  lazy val wsroute = 
+    pathPrefix("hide") {
+      path("ws") {
+        implicit ctx =>
+          ctx.responder ! WebSocket.Register(ctx.request, hide, true)
+      }
     }
 }

@@ -1,8 +1,7 @@
 package reactive.find
 
-import reactive.socket.ReactiveServer
+import reactive.websocket.WebSocket
 import akka.actor.{ Actor, ActorLogging }
-import org.java_websocket.WebSocket
 import scala.collection.mutable
 
 object FindActor {
@@ -13,60 +12,52 @@ object FindActor {
   case class Clear(marker : Marker) extends FindMessage
   case class Move(marker : Marker, longitude : String, latitude : String) extends FindMessage
 }
-
 class FindActor extends Actor with ActorLogging {
-  import FindActor._
-  import ReactiveServer._
-
   val clients = mutable.ListBuffer[WebSocket]()
-  val markers = mutable.Map[Marker, Option[Move]]()
-
+  val markers = mutable.Map[FindActor.Marker, Option[FindActor.Move]]()
   override def receive = {
-    case Open(ws, hs) =>
-      clients += ws
-      for (markerEntry <- markers if None != markerEntry._2)
-        ws.send(message(markerEntry._2.get))
-      log.debug("registered monitor for url {}", ws.getResourceDescriptor)
-
-    case Close(ws, code, reason, ext) => self ! Unregister(ws)
-
-    case Error(ws, ex)                => self ! Unregister(ws)
-
-    case Message(ws, msg) =>
-      log.debug("url {} received msg '{}'", ws.getResourceDescriptor, msg)
-
-    case Clear =>
+    case WebSocket.Open(ws) =>
+      if (null != ws) {
+        clients += ws
+        for (markerEntry <- markers if None != markerEntry._2)
+          ws.send(message(markerEntry._2.get))
+        log.debug("registered monitor for url {}", ws.path)
+      }
+    case WebSocket.Close(ws, code, reason) =>
+      self ! FindActor.Unregister(ws)
+    case WebSocket.Error(ws, ex) =>
+      self ! FindActor.Unregister(ws)
+    case WebSocket.Message(ws, msg) =>
+      if (null != ws)
+        log.debug("url {} received msg '{}'", ws.path, msg)
+    case FindActor.Clear =>
       for (markerEntry <- markers if None != markerEntry._2) {
         val msg = message(markerEntry._1)
         for (client <- clients) client.send(msg)
       }
-      markers.clear()
-
-    case Unregister(ws) =>
+      markers.clear
+    case FindActor.Unregister(ws) =>
       if (null != ws) {
         clients -= ws
         log.debug("unregister monitor")
       }
-
-    case Clear(marker) =>
+    case FindActor.Clear(marker) =>
       log.debug("clear marker {} '{}'", marker.idx, marker.id)
       val msg = message(marker)
-      markers -= marker
+      markers remove marker
       for (client <- clients) client.send(msg)
       log.debug("sent to {} clients to clear marker '{}'", clients.size, msg)
-
-    case marker @ Marker(id, idx) =>
+    case marker @ FindActor.Marker(id, idx) =>
       markers += ((marker, None))
       log.debug("create new marker {} '{}'", idx, id)
-
-    case move @ Move(marker, lng, lat) =>
+    case move @ FindActor.Move(marker, lng, lat) =>
       markers += ((marker, Some(move)))
       val msg = message(move)
       for (client <- clients) client.send(msg)
       log.debug("sent to {} clients the new move '{}'", clients.size, msg)
+    case whatever =>
+      log.warning("Finding '{}'", whatever)
   }
-
-  private def message(move : Move) = s"""{"move":{"id":"${move.marker.id}","idx":"${move.marker.idx}","longitude":${move.longitude},"latitude":${move.latitude}}}"""
-
-  private def message(marker : Marker) = s"""{"clear":{"id":"${marker.id}","idx":"${marker.idx}"}}"""
+  private def message(move : FindActor.Move) = s"""{"move":{"id":"${move.marker.id}","idx":"${move.marker.idx}","longitude":${move.longitude},"latitude":${move.latitude}}}"""
+  private def message(marker : FindActor.Marker) = s"""{"clear":{"id":"${marker.id}","idx":"${marker.idx}"}}"""
 }
