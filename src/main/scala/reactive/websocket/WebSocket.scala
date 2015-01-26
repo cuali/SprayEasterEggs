@@ -9,7 +9,7 @@ object WebSocket {
   case class Message(ws : WebSocket, msg : String) extends WebSocketMessage
   case class Close(ws : WebSocket, code : Int, reason : String) extends WebSocketMessage
   case class Error(ws : WebSocket, reason : String) extends WebSocketMessage
-  case class Connect(host : String, port : Int, resource : String) extends WebSocketMessage
+  case class Connect(host : String, port : Int, resource : String, withSsl : Boolean = false) extends WebSocketMessage
   case class Send(msg : String) extends WebSocketMessage
   case object Release extends WebSocketMessage
   case class Register(request : HttpRequest, handler : ActorRef, autoping : Boolean = false)

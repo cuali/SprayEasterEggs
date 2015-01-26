@@ -7,8 +7,7 @@ import reactive.websocket.WebSocketServer
 import akka.actor.{ ActorSystem, Props }
 import akka.event.Logging.InfoLevel
 import scala.reflect.ClassTag
-import spray.http.HttpRequest
-import spray.http.StatusCodes.{ MovedPermanently, NotFound }
+import spray.http.{ HttpRequest, StatusCodes }
 import spray.routing.{ Directives, RouteConcatenation }
 import spray.routing.directives.LogEntry
 
@@ -30,7 +29,7 @@ trait ReactiveApi extends RouteConcatenation with StaticRoute with AbstractSyste
   lazy val wsroutes = logRequest(showReq _) {
     new FindService(find).wsroute ~
     new HideService(hide).wsroute ~
-    complete(NotFound)
+    complete(StatusCodes.NotFound)
   }
   val socketService = system.actorOf(Props[SocketService], "tcp")
 }
@@ -50,5 +49,5 @@ trait StaticRoute extends Directives {
     } ~
     pathEndOrSingleSlash {
       getFromResource("index.html")
-    } ~ complete(NotFound)
+    } ~ complete(StatusCodes.NotFound)
 }
