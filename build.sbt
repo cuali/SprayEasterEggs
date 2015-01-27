@@ -8,21 +8,20 @@ libraryDependencies ++= {
   val akkaV  = "2.3.9"
   val sprayV = "1.3.2"
   val kamonV = "0.3.5"
-  val aspectV = "1.8.4"
   Seq(
-    "com.wandoulabs.akka" %%  "spray-websocket"       % "0.1.3"           withSources() withJavadoc,
+    "com.wandoulabs.akka" %%  "spray-websocket"       % "0.1.4"           withSources() withJavadoc,
     "io.spray"            %%  "spray-json"            % "1.3.1"           withSources() withJavadoc,
     "io.spray"            %%  "spray-can"             % sprayV            withSources() withJavadoc,
     "io.spray"            %%  "spray-routing"         % sprayV            withSources() withJavadoc,
     "com.typesafe.akka"   %%  "akka-actor"            % akkaV             withSources() withJavadoc,
     "com.typesafe.akka"   %%  "akka-slf4j"            % akkaV             withSources() withJavadoc,
-    //*
+    /*
+    "org.aspectj"         %   "aspectjweaver"         % "1.8.4"           withSources() withJavadoc,
     "io.kamon"            %%  "kamon-core"            % kamonV            withSources() withJavadoc,
     "io.kamon"            %%  "kamon-spray"           % kamonV            withSources() withJavadoc,
     "io.kamon"            %%  "kamon-statsd"          % kamonV            withSources() withJavadoc,
     "io.kamon"            %%  "kamon-log-reporter"    % kamonV            withSources() withJavadoc,
     "io.kamon"            %%  "kamon-system-metrics"  % kamonV            withSources() withJavadoc,
-    "org.aspectj"         %   "aspectjweaver"         % aspectV           withSources() withJavadoc,
     "io.kamon"            %%  "kamon-testkit"         % kamonV   % "test" withSources() withJavadoc,
     // */
     "com.typesafe.akka"   %%  "akka-testkit"          % akkaV    % "test" withSources() withJavadoc,

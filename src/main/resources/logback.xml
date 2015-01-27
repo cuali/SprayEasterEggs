@@ -1,12 +1,15 @@
 <configuration>
-
+<!--
   <conversionRule conversionWord="kamonToken" converterClass="kamon.trace.logging.LogbackTraceTokenConverter"/>
-
+-->
   <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
     <!-- encoders are assigned the type
          ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
     <encoder>
+<!--
       <pattern>%d{HH:mm:ss.SSS} %-5level [%kamonToken][%X{akkaSource}] %logger{36} - %msg%n</pattern>
+-->
+      <pattern>%d{HH:mm:ss.SSS} %-5level [%X{akkaSource}] %logger{36} - %msg%n</pattern>
     </encoder>
   </appender>
 
