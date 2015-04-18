@@ -8,7 +8,7 @@ resolvers += "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases"
 
 libraryDependencies ++= {
   val akkaV  = "2.3.9"
-  val sprayV = "1.3.2"
+  val sprayV = "1.3.3"
   val kamonV = "0.3.5"
   Seq(
     "com.wandoulabs.akka" %%  "spray-websocket"       % "0.1.4"           withSources() withJavadoc,
@@ -28,10 +28,10 @@ libraryDependencies ++= {
     // */
     "com.typesafe.akka"   %%  "akka-testkit"          % akkaV    % "test" withSources() withJavadoc,
     "io.spray"            %%  "spray-testkit"         % sprayV   % "test" withSources() withJavadoc,
-    "org.scalatest"       %%  "scalatest"             % "2.2.3"  % "test",
+    "org.scalatest"       %%  "scalatest"             % "2.2.4"  % "test",
     "junit"               %   "junit"                 % "4.12"   % "test",
-    "org.specs2"          %%  "specs2"                % "2.4.15" % "test",
-    "ch.qos.logback"      %   "logback-classic"       % "1.1.2"
+    "org.specs2"          %%  "specs2"                % "2.4.17" % "test",
+    "ch.qos.logback"      %   "logback-classic"       % "1.1.3"
   )
 }
 
