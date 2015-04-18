@@ -4,6 +4,8 @@ version       := "0.4"
 
 scalaVersion  := "2.11.5"
 
+resolvers += "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases"
+
 libraryDependencies ++= {
   val akkaV  = "2.3.9"
   val sprayV = "1.3.2"
