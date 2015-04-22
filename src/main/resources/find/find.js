@@ -82,7 +82,7 @@ $(document).ready(function() {
 	var markers = map.getLayer("Markers")
 	// open a WebSocket
 	var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket
-    var mapSocket = new WS("ws://"+window.location.hostname+":6696/find/ws")
+    var mapSocket = new WS("wss://"+window.location.hostname+":6696/find/ws")
 	mapSocket.onmessage = function(event) {
 		log(event.data)
         var msg = JSON.parse(event.data)

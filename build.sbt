@@ -1,13 +1,13 @@
 organization  := "cua.li"
 
-version       := "0.4"
+version       := "0.5"
 
-scalaVersion  := "2.11.5"
+scalaVersion  := "2.11.6"
 
 resolvers += "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases"
 
 libraryDependencies ++= {
-  val akkaV  = "2.3.9"
+  val akkaV  = "2.3.10"
   val sprayV = "1.3.3"
   val kamonV = "0.3.5"
   Seq(
@@ -18,7 +18,7 @@ libraryDependencies ++= {
     "com.typesafe.akka"   %%  "akka-actor"            % akkaV             withSources() withJavadoc,
     "com.typesafe.akka"   %%  "akka-slf4j"            % akkaV             withSources() withJavadoc,
     /*
-    "org.aspectj"         %   "aspectjweaver"         % "1.8.4"           withSources() withJavadoc,
+    "org.aspectj"         %   "aspectjweaver"         % "1.8.5"           withSources() withJavadoc,
     "io.kamon"            %%  "kamon-core"            % kamonV            withSources() withJavadoc,
     "io.kamon"            %%  "kamon-spray"           % kamonV            withSources() withJavadoc,
     "io.kamon"            %%  "kamon-statsd"          % kamonV            withSources() withJavadoc,
@@ -30,15 +30,15 @@ libraryDependencies ++= {
     "io.spray"            %%  "spray-testkit"         % sprayV   % "test" withSources() withJavadoc,
     "org.scalatest"       %%  "scalatest"             % "2.2.4"  % "test",
     "junit"               %   "junit"                 % "4.12"   % "test",
-    "org.specs2"          %%  "specs2"                % "2.4.17" % "test",
+    "org.specs2"          %%  "specs2"                % "3.3.1" % "test",
     "ch.qos.logback"      %   "logback-classic"       % "1.1.3"
   )
 }
 
-scalacOptions ++= Seq("-deprecation", "-encoding", "UTF-8", "-feature", "-target:jvm-1.7", "-unchecked",
+scalacOptions ++= Seq("-deprecation", "-encoding", "UTF-8", "-feature", "-target:jvm-1.8", "-unchecked",
   "-Ywarn-adapted-args", "-Ywarn-value-discard", "-Xlint")
 
-javacOptions ++= Seq("-Xlint:deprecation", "-Xlint:unchecked", "-source", "1.7", "-target", "1.7", "-g:vars")
+javacOptions ++= Seq("-Xlint:deprecation", "-Xlint:unchecked", "-source", "1.8", "-target", "1.8", "-g:vars")
 
 doc in Compile <<= target.map(_ / "none")
 
@@ -50,7 +50,7 @@ Keys.fork in Test := false
 
 parallelExecution in Test := false
 
-seq(Revolver.settings: _*)
+Revolver.settings
 
 import com.typesafe.sbt.SbtAspectj._
 
@@ -59,3 +59,5 @@ aspectjSettings
 fork in run := true
 
 javaOptions <++= AspectjKeys.weaverOptions in Aspectj
+
+enablePlugins(JavaServerAppPackaging)

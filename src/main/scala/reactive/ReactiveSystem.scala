@@ -1,13 +1,13 @@
 package reactive
 
-import reactive.api.{ MainActors, ReactiveApi }
+import reactive.api.{ MainActors, ReactiveApi, ReactiveSecurityConfig }
 import akka.actor.{ ActorSystem, PoisonPill }
 import akka.io.{ IO, Tcp }
 import java.net.InetSocketAddress
 import spray.can.Http
 import spray.can.server.UHttp
 
-object ReactiveSystem extends App with MainActors with ReactiveApi {
+object ReactiveSystem extends App with MainActors with ReactiveApi with ReactiveSecurityConfig {
   implicit lazy val system = ActorSystem("reactive-system")
   sys.addShutdownHook({ system.shutdown })
   IO(UHttp) ! Http.Bind(wsService, Configuration.host, Configuration.portWs)
