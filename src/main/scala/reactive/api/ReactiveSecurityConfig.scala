@@ -10,7 +10,7 @@ trait ReactiveSecurityConfig {
   implicit lazy val sslContext: SSLContext = {
     val keyStoreResource = "/eggs-keystore.jks"
     val keyStorePassword = "Spray Easter Eggs"
-    val keyStore = KeyStore.getInstance("pkcs12")
+    val keyStore = KeyStore.getInstance("jks")
     keyStore.load(getClass.getResourceAsStream(keyStoreResource), keyStorePassword.toCharArray)
     val keyManagerFactory = KeyManagerFactory.getInstance("SunX509")
     keyManagerFactory.init(keyStore, keyStorePassword.toCharArray)
@@ -22,7 +22,7 @@ trait ReactiveSecurityConfig {
   }
   implicit lazy val sslEngineProvider: ServerSSLEngineProvider = {
     ServerSSLEngineProvider { engine =>
-//      engine.setEnabledCipherSuites(Array("TLS_RSA_WITH_AES_256_CBC_SHA", "TLS_RSA_WITH_AES_128_CBC_SHA"))
+      engine.setEnabledCipherSuites(Array("TLS_RSA_WITH_AES_256_CBC_SHA", "TLS_RSA_WITH_AES_128_CBC_SHA"))
       engine.setEnabledProtocols(Array("SSLv3", "TLSv1.2"))
       engine
     }

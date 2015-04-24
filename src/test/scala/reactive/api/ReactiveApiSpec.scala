@@ -1,10 +1,10 @@
 package reactive.api
 
-import org.specs2.mutable.Specification
+import org.specs2.mutable
 import spray.testkit.Specs2RouteTest
 import spray.http.{ MediaTypes, StatusCodes }
 
-class ReactiveApiSpec extends Specification with Specs2RouteTest with MainActors with ReactiveApi {
+class ReactiveApiSpec extends mutable.Specification with Specs2RouteTest with MainActors with ReactiveApi {
   def actorRefFactory = system
   "Reactive API" should {
     "return the correct page for GET requests to the pages' path" in {

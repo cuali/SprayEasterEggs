@@ -2,14 +2,14 @@ package reactive.hide
 
 import reactive.api.{ MainActors, ReactiveApi }
 import org.junit.runner.RunWith
-import org.specs2.mutable.Specification
+import org.specs2.mutable
 import org.specs2.runner.JUnitRunner
 import spray.http.{ HttpEntity, MediaTypes, StatusCodes }
 import spray.routing.Directives
 import spray.testkit.Specs2RouteTest
 
 @RunWith(classOf[JUnitRunner])
-class HideServiceSpec extends Specification with Directives with Specs2RouteTest with MainActors with ReactiveApi {
+class HideServiceSpec extends mutable.Specification with Directives with Specs2RouteTest with MainActors with ReactiveApi {
   def actorRefFactory = system
 
   "Reactive API" should {

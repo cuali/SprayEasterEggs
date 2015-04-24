@@ -30,13 +30,15 @@ libraryDependencies ++= {
     "io.spray"            %%  "spray-testkit"         % sprayV   % "test" withSources() withJavadoc,
     "org.scalatest"       %%  "scalatest"             % "2.2.4"  % "test",
     "junit"               %   "junit"                 % "4.12"   % "test",
-    "org.specs2"          %%  "specs2"                % "3.3.1" % "test",
+    "org.specs2"          %%  "specs2"                % "2.4.17" % "test", // until spray-testkit gets compiled against specs 3.3
     "ch.qos.logback"      %   "logback-classic"       % "1.1.3"
   )
 }
 
 scalacOptions ++= Seq("-deprecation", "-encoding", "UTF-8", "-feature", "-target:jvm-1.8", "-unchecked",
   "-Ywarn-adapted-args", "-Ywarn-value-discard", "-Xlint")
+
+scalacOptions in Test ++= Seq("-Yrangepos")
 
 javacOptions ++= Seq("-Xlint:deprecation", "-Xlint:unchecked", "-source", "1.8", "-target", "1.8", "-g:vars")
 
