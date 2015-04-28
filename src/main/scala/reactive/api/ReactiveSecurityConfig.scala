@@ -22,7 +22,8 @@ trait ReactiveSecurityConfig {
   }
   implicit lazy val sslEngineProvider: ServerSSLEngineProvider = {
     ServerSSLEngineProvider { engine =>
-      engine.setEnabledCipherSuites(Array("TLS_RSA_WITH_AES_256_CBC_SHA", "TLS_RSA_WITH_AES_128_CBC_SHA"))
+      engine.setEnabledCipherSuites(engine.getSupportedCipherSuites)
+      //engine.setEnabledCipherSuites(Array("TLS_RSA_WITH_AES_256_CBC_SHA", "TLS_RSA_WITH_AES_128_CBC_SHA"))
       engine.setEnabledProtocols(Array("SSLv3", "TLSv1.2"))
       engine
     }
