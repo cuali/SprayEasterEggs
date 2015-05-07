@@ -41,6 +41,8 @@ class EchoWebSocketTest extends FunSuite with MainActors with ReactiveApi {
     Thread.sleep(2000L)
     assert(rock == wsmsg)
     wse ! WebSocket.Release
+    Thread.sleep(1000L)
+    IO(UHttp) ! Http.Unbind
     system.shutdown
     Thread.sleep(1000L)
   }

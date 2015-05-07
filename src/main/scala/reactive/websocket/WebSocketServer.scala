@@ -7,9 +7,8 @@ import spray.can.Http
 import spray.can.server.UHttp.Upgraded
 import spray.can.websocket.{ UpgradedToWebSocket, WebSocketServerWorker }
 import spray.can.websocket.frame.{ CloseFrame, PingFrame, PongFrame, StatusCode, TextFrame }
-import spray.routing.{ RequestContext, Route }
 import spray.http.HttpRequest
-import spray.routing.{ Rejected, RequestContext }
+import spray.routing.{ Rejected, RequestContext, Route }
 
 class WebSocketServer(val serverConnection: ActorRef, val route: Route) extends RouteActor with WebSocketServerWorker with WebSocket {
   import context.dispatcher

@@ -58,6 +58,9 @@ class PlainSocketTest extends FunSuite with MainActors with ReactiveApi {
     val clear = """\{"clear":\{"id":"[-0-9a-f]+","idx":"C"\}\}""".r
     assert(None != clear.findFirstIn(wsmsg))
     wsf ! WebSocket.Release
+    Thread.sleep(1000L)
+    IO(UHttp) ! Http.Unbind
+    IO(Tcp) ! Tcp.Unbind
     system.shutdown
     Thread.sleep(1000L)
   }

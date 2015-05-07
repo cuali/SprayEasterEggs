@@ -9,13 +9,13 @@ import spray.can.server.UHttp
 
 object ReactiveSystem extends App with MainActors with ReactiveApi with ReactiveSecurityConfig {
   implicit lazy val system = ActorSystem("reactive-system")
-  sys.addShutdownHook({ system.shutdown })
   IO(UHttp) ! Http.Bind(wsService, Configuration.host, Configuration.portWs)
   // Since the UTttp extension extends from Http extension, it starts an actor whose name will later collide with the Http extension.
   system.actorSelection("/user/IO-HTTP") ! PoisonPill
   IO(Tcp) ! Tcp.Bind(socketService, new InetSocketAddress(Configuration.host, Configuration.portTcp))
   // We could use IO(UHttp) here instead of killing the "/user/IO-HTTP" actor
   IO(Http) ! Http.Bind(rootService, Configuration.host, Configuration.portHttp)
+  sys.addShutdownHook({ IO(UHttp) ! Http.Unbind; IO(Http) ! Http.Unbind; system.shutdown })
 }
 
 object Configuration {
