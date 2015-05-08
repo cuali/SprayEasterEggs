@@ -28,7 +28,7 @@ $(document).ready(function() {
 	$(".alert").alert()
 	// open a WebSocket
 	var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket
-    var mapSocket = new WS("wss://"+window.location.hostname+":6696/hide/ws")
+    var mapSocket = new WS("ws"+location.protocol.substring(4)+"//"+window.location.hostname+":6696/hide/ws")
 	mapSocket.onopen = function(event) {
 		var msg = "-38.4798 -3.8093"
 		mapSocket.send(msg)
