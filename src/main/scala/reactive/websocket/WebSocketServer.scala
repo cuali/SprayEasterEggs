@@ -18,7 +18,7 @@ class WebSocketServer(val serverConnection: ActorRef, val route: Route) extends 
     case request : HttpRequest =>
       val ctx = RequestContext(request, self, request.uri.path)
       log.debug("HTTP request for uri {}", request.uri.path)
-      route(ctx.withResponder(self))
+      route(ctx)
       handshaking(request)
     case WebSocket.Register(request, actor, ping) =>
       if (ping) pinger = Some(context.system.scheduler.scheduleOnce(110.seconds, self, WebSocket.Ping))
